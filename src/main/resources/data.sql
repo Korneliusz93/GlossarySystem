@@ -62,3 +62,18 @@ INSERT INTO "CONTACT" VALUES
 (58, 1, 'bryan.shaw@ha.ee', 'Bryan', 'Shaw', 9, 1),
 (59, 1, 'essie.adams@iliat.cw', 'Essie', 'Adams', 8, 5),
 (60, 1, 'gary.osborne@do.ga', 'Gary', 'Osborne', 7, 5);
+
+INSERT INTO "CATEGORY" VALUES
+(1,1,'Automotive','Security'),
+(2,2,'Life Sciences','Neurology'),
+(3,3,'Software','Applications');
+
+INSERT INTO "CLIENT" VALUES
+(1,'Unicorn','Neverland Co.'),
+(2,'Stampless','Post Inc.'),
+(3,'JustIn','Out Ltd.');
+
+INSERT INTO "LANGUAGE" VALUES
+(1,'fr-fr','French'),
+(2,'de-de','German'),
+(3,'zh-cn','Chinese');
