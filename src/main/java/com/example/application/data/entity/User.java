@@ -21,6 +21,14 @@ public class User {
         this.password = password;
     }
 
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -30,5 +38,11 @@ public class User {
     private String username;
     @Column(name = "password")
     private String password;
+    @Column(name = "role")
+    private String role;
+    @Column(name = "full_name")
+    private String fullName;
+    @Column(name = "email")
+    private String email;
 
 }

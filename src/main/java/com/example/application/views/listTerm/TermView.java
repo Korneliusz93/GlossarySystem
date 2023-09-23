@@ -17,10 +17,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 
 @PermitAll
 @Route(value="terms", layout = MainLayout.class)
 @PageTitle("Terms | Gloss system")
+@RolesAllowed({ "ROLE_ADMIN", "ROLE_STAFF", "ROLE_USER", "ROLE_GUEST" })
 public class TermView extends VerticalLayout {
     Grid<Term> grid = new Grid<>(Term.class);
     TextField filterText = new TextField();

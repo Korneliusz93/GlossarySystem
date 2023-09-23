@@ -11,10 +11,12 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 
 @PermitAll
 @Route(value="clients", layout = MainLayout.class)
 @PageTitle("Clients | Gloss System")
+@RolesAllowed({ "ROLE_ADMIN", "ROLE_STAFF" })
 public class ClientView extends VerticalLayout {
     Grid<Client> grid = new Grid<>(Client.class);
     TextField filterText = new TextField();

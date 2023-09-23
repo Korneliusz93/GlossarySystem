@@ -16,10 +16,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 
 @PermitAll
 @Route(value="projects", layout = MainLayout.class)
 @PageTitle("Projects | Gloss system")
+@RolesAllowed({ "ROLE_ADMIN", "ROLE_STAFF", "ROLE_USER" })
 public class ProjectView extends VerticalLayout {
     Grid<Project> grid = new Grid<>(Project.class);
     TextField filterText = new TextField();

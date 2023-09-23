@@ -11,10 +11,12 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 
 @PermitAll
 @Route(value="languages", layout = MainLayout.class)
 @PageTitle("Langauges | Gloss System")
+@RolesAllowed({ "ROLE_ADMIN", "ROLE_STAFF" })
 public class LanguageView extends VerticalLayout {
     Grid<Language> grid = new Grid<>(Language.class);
     TextField filterText = new TextField();

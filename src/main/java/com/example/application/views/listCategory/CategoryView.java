@@ -12,11 +12,12 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
-import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 
-@PermitAll
+//@PermitAll
 @Route(value="categories", layout = MainLayout.class)
 @PageTitle("Categories | GlosSys")
+@RolesAllowed({ "ROLE_ADMIN", "ROLE_STAFF" })
 public class CategoryView extends VerticalLayout {
     // omitted
     Grid<Category> grid = new Grid<>(Category.class);
@@ -116,7 +117,6 @@ public class CategoryView extends VerticalLayout {
         grid.asSingleSelect().clear();
         editCategory(new Category());
     }
-
 
     private void updateList() {
         grid.setItems(service.findAllCategories(filterText.getValue()));

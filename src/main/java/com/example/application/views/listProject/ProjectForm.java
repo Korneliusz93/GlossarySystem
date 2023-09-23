@@ -1,5 +1,4 @@
 package com.example.application.views.listProject;
-
 import com.example.application.data.entity.Category;
 import com.example.application.data.entity.Client;
 import com.example.application.data.entity.Language;
