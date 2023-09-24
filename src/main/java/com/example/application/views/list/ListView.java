@@ -34,7 +34,6 @@ public class ListView extends VerticalLayout {
         setSizeFull();
         configureGrid();
         configureForm();
-
         add(getToolbar(), getContent());
         updateList();
         closeEditor();
@@ -84,10 +83,8 @@ public class ListView extends VerticalLayout {
         filterText.setClearButtonVisible(true);
         filterText.setValueChangeMode(ValueChangeMode.LAZY);
         filterText.addValueChangeListener(e -> updateList());
-
         Button addUserButton = new Button("Add user");
         addUserButton.addClickListener(click -> addUser());
-
         HorizontalLayout toolbar = new HorizontalLayout(filterText, addUserButton);
         toolbar.addClassName("toolbar");
         return toolbar;

@@ -15,4 +15,5 @@ public class PasswordEncoderProvider {
     public PasswordEncoder getPasswordEncoder() {
         return passwordEncoder;
     }
+
 }

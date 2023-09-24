@@ -29,10 +29,10 @@ public class TermView extends VerticalLayout {
     ComboBox<Project> projectBox = new ComboBox<Project>();
     TermForm form;
     String selectedValue;
-    TermService service;
+    TermService termService;
     ProjectService projectService;
     public TermView(TermService service, ProjectService projectService){
-        this.service = service;
+        this.termService = service;
         this.projectService = projectService;
         addClassName("term-view");
         setSizeFull();
@@ -59,12 +59,12 @@ public class TermView extends VerticalLayout {
         form.addListener(TermForm.CloseEvent.class, e -> closeEditor());
     }
     private void saveTerm(TermForm.SaveEvent event) {
-        service.saveTerm(event.getTerm());
+        termService.saveTerm(event.getTerm());
         updateList();
         resetEditor();
     }
     private void deleteTerm(TermForm.DeleteEvent event) {
-        service.deleteTerm(event.getTerm());
+        termService.deleteTerm(event.getTerm());
         updateList();
         resetEditor();
     }
@@ -146,11 +146,11 @@ public class TermView extends VerticalLayout {
         editTerm(new Term());
     }
     private void updateList() {
-        grid.setItems(service.findAllTerms(filterText.getValue()));
+        grid.setItems(termService.findAllTerms(filterText.getValue()));
     }
 
     private void updateListByProj(String projName) {
-        grid.setItems(service.findAllTermsByProject(projName));
+        grid.setItems(termService.findAllTermsByProject(projName));
     }
 
 }

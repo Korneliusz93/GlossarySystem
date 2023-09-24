@@ -23,6 +23,7 @@ public class UserForm extends FormLayout {
         this.user = user;
         binder.readBean(user);
     }
+
     TextField userName = new TextField("User name");
     TextField password = new TextField("Password");
     TextField email = new TextField("E-mail");

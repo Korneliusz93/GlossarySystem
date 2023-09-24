@@ -1,10 +1,8 @@
 package com.example.application.data.service;
-
 import com.example.application.data.entity.Project;
 import com.example.application.data.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -39,6 +37,10 @@ public class ProjectService {
             return;
         }
         projectRepository.save(project);
+    }
+
+    public long getProjectCategoryCount(){
+        return projectRepository.count();
     }
 
 }

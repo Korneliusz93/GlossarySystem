@@ -181,4 +181,5 @@ public class Term {
     public void setTargeteNote(String targeteNote) {
         this.targeteNote = targeteNote;
     }
+
 }
