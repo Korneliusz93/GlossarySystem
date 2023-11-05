@@ -43,7 +43,7 @@ public class TermDetailsFormLayout extends FormLayout {
         targetTerm.setValue(term.getTargetTerm());
 
         sourceSynonym.setValue(term.getSourceSynonym());
-        targetSynonym.setValue(term.getSourceSynonym());
+        targetSynonym.setValue(term.getTargetSynonym());
 
         sourceAbbreviation.setValue(term.getSourceAbbreviation());
         targetAbbreviation.setValue(term.getTargetAbbreviation());

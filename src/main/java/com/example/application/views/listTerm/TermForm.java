@@ -65,8 +65,13 @@ public class TermForm extends FormLayout {
         projectComboBox.setItemLabelGenerator(Project::getProjectName);
         binder.bind(projectComboBox,Term::getProject,Term::setProject);
 
-        add(projectComboBox, sourceTerm, sourceSynonym, sourceAbbreviation, sourcePartOfSpeech, sourceDefinition, sourceContext, sourceNote,
-                targetTerm, targetSynonym, targetAbbreviation, targetPartOfSpeech, targetDefinition, targetContext, targeteNote,
+        add(projectComboBox, sourceTerm, targetTerm,
+                sourceSynonym, targetSynonym,
+                sourceAbbreviation, targetAbbreviation,
+                sourcePartOfSpeech, targetPartOfSpeech,
+                sourceDefinition, targetDefinition,
+                sourceContext, targetContext,
+                sourceNote, targeteNote,
                 createButtonsLayout());
     }
 
