@@ -10,6 +10,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @PermitAll
@@ -41,7 +43,6 @@ public class TermView extends VerticalLayout {
 
     GridContextMenu<Term> menu = grid.addContextMenu();
 
-
     public TermView(TermService service, ProjectService projectService){
         this.termService = service;
         this.projectService = projectService;
@@ -50,7 +51,7 @@ public class TermView extends VerticalLayout {
         configureGrid();
         configureForm();
         add(getToolbar(), getContent());
-        updateList();
+        updateListUnfiltered();
         closeEditor();
     }
     private HorizontalLayout getContent() {
@@ -70,14 +71,16 @@ public class TermView extends VerticalLayout {
     }
     private void saveTerm(TermForm.SaveEvent event) {
         termService.saveTerm(event.getTerm());
-        //updateList();
         updateListFiltered();
         resetEditor();
     }
     private void deleteTerm(TermForm.DeleteEvent event) {
         termService.deleteTerm(event.getTerm());
-        updateList();
-        resetEditor();
+        updateListFiltered();
+    }
+    private void deleteTerm(Term term) {
+        termService.deleteTerm(term);
+        updateListFiltered();
     }
     private static ComponentRenderer<TermDetailsFormLayout, Term> createTermDetailsRenderer() {
         return new ComponentRenderer<>(TermDetailsFormLayout::new,
@@ -85,29 +88,12 @@ public class TermView extends VerticalLayout {
     }
     private void configureGrid() {
         grid.addClassNames("term-grid");
-
         grid.setSizeFull();
         grid.setColumns("sourceTerm");
-        //grid.addColumn(term -> term.getSourceTerm()).setHeader("Source Language");
         grid.addColumn(term -> term.getTargetTerm()).setHeader("Target Language");
 
-        /*grid.setItemDetailsRenderer(
-                new ComponentRenderer<>(term -> {
-                    VerticalLayout layout = new VerticalLayout();
-                    layout.add(new Label("Source abbreviation: " +
-                            term.getSourceAbbreviation() + "Target abbreviation: " +
-                            term.getTargetAbbreviation()));
-                    layout.add(new Label("Source context: " +
-                            term.getSourceContext() + "Target context: " +
-                            term.getTargetContext()));
-                    return layout;
-                }));*/
-
         grid.setItemDetailsRenderer(createTermDetailsRenderer());
-
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
-        //grid.asSingleSelect().addValueChangeListener(event ->
-                //editTerm(event.getValue()));
 
         menu.addItem("Edit", event -> {
             editTerm(event.getItem().get());
@@ -116,7 +102,6 @@ public class TermView extends VerticalLayout {
             deleteTermContext(event.getItem().get());
         });
     }
-
     private void configureProjectBox(){
         projectBox.setItems(projectService.findAllProjects());
         projectBox.setItemLabelGenerator(Project::getProjectName);
@@ -125,38 +110,38 @@ public class TermView extends VerticalLayout {
 
         projectBox.addValueChangeListener(event -> {
             // Get the selected value
-            if (event.getValue()==null)
-            {
-                projectFilter.setProjectName("empty");
-                selectedValue = "empty";
-            } else {
+            if (event.getValue()!=null){
                 selectedValue = event.getValue().getProjectName();
-            }
                 projectFilter.setProjectName(selectedValue);
+            } else {
+                selectedValue = null;
+                projectFilter.setProjectName(null);
+            }
         });
-        projectBox.addValueChangeListener(e -> updateListByProj(selectedValue));
+        projectBox.addValueChangeListener(e -> updateListByProj(Optional.ofNullable(selectedValue)));
 
     }
-
     private HorizontalLayout getToolbar() {
         filterText.setPlaceholder("Filter by term...");
         filterText.setClearButtonVisible(true);
         filterText.setValueChangeMode(ValueChangeMode.LAZY);
-        filterText.addValueChangeListener(e -> updateListSearch(projectFilter.getProjectName()));
+        filterText.addValueChangeListener(e -> updateListSearch(Optional.ofNullable(projectFilter.getProjectName())));
 
         configureProjectBox();
 
         Button addTermButton = new Button("Add term");
         addTermButton.addClickListener(click -> addProject());
 
-        Button clearSelectionButton = new Button("Clear selection");
+        Button clearSelectionButton = new Button(VaadinIcon.CLOSE.create());
         clearSelectionButton.addClickListener(click -> {
-                    projectBox.setValue(null);
+                    projectFilter.setProjectName("");
+                    projectBox.clear();
                     filterText.setValue("");
+                    updateListUnfiltered();
                 }
         );
 
-        HorizontalLayout toolbar = new HorizontalLayout(filterText, projectBox, addTermButton, clearSelectionButton);
+        HorizontalLayout toolbar = new HorizontalLayout(filterText, projectBox, clearSelectionButton, addTermButton);
         toolbar.addClassName("toolbar");
         return toolbar;
     }
@@ -170,12 +155,7 @@ public class TermView extends VerticalLayout {
         }
     }
     private void deleteTermContext(Term term) {
-        termService.deleteTerm(term);
-        updateList();
-        //resetEditor();
-    }
-    public void viewTerm(Term term){
-        //termDetailsFormLayout.setTerm(term);
+        deleteTerm(term);
     }
     private void closeEditor() {
         form.setTerm(null);
@@ -194,19 +174,21 @@ public class TermView extends VerticalLayout {
     private void updateList() {
         grid.setItems(termService.findAllTerms(filterText.getValue()));
     }
+    private void updateListUnfiltered(){
+        grid.setItems(termService.findAllTerms());
+    }
     private void updateListFiltered() {
-        if (projectFilter.getProjectName()==null || projectFilter.getProjectName().isEmpty()){
-            updateList();
+        if (projectFilter.getProjectName().isEmpty()){
+            updateListUnfiltered();
         } else {
-            updateListByProj(projectFilter.getProjectName());
+            updateListByProj(Optional.ofNullable(projectFilter.getProjectName()));
         }
     }
-
-    private void updateListSearch(String projName){
-        if(projName.equals("empty")){
-            grid.setItems(termService.findAllTerms());
-        }else{
-            List<Term> terms = termService.findAllTermsByProject(projName);
+    private void updateListSearch(Optional<String> projName){
+        if(projName.isEmpty()){
+            updateListUnfiltered();
+        }else if (projName.isPresent()){
+            List<Term> terms = termService.findAllTermsByProject(projName.get());
             List <Term> filteredTerms =
                     terms.stream()
                         .filter(term -> term.getSourceTerm().contains(filterText.getValue()))
@@ -214,12 +196,11 @@ public class TermView extends VerticalLayout {
             grid.setItems(filteredTerms);
         }
     }
-
-    private void updateListByProj(String projName) {
-        if(projName.equals("empty")){
-            grid.setItems(termService.findAllTerms());
+    private void updateListByProj(Optional<String> projName) {
+        if(projName.isEmpty()){
+            updateListUnfiltered();
         }else{
-            grid.setItems(termService.findAllTermsByProject(projName));
+            grid.setItems(termService.findAllTermsByProject(projName.get()));
         }
     }
 }
