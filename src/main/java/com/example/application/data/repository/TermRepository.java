@@ -1,6 +1,8 @@
 package com.example.application.data.repository;
 
+import com.example.application.data.entity.Project;
 import com.example.application.data.entity.Term;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +18,8 @@ public interface TermRepository extends JpaRepository<Term, Long> {
     @Query("select t from Term t " +
             "where lower(t.project.projectName) like lower(concat('%', :searchTerm, '%')) ")
     List<Term> searchByProj(@Param("searchTerm") String searchTerm);
+    List<Term> findBySourceTermLikeIgnoreCase(String sourceTermPattern, Pageable pageable);
+    List<Term> findByProjectIsLike(Project project, Pageable pageable);
 
 
 }

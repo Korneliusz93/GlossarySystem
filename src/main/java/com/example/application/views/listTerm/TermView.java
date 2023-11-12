@@ -3,6 +3,7 @@ package com.example.application.views.listTerm;
 import com.example.application.data.entity.Project;
 import com.example.application.data.entity.Term;
 import com.example.application.data.models.ProjectFilter;
+import com.example.application.data.repository.TermRepository;
 import com.example.application.data.service.ProjectService;
 import com.example.application.data.service.TermService;
 import com.example.application.views.MainLayout;
@@ -19,12 +20,11 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @PermitAll
 @Route(value="terms", layout = MainLayout.class)
@@ -40,6 +40,10 @@ public class TermView extends VerticalLayout {
     String selectedValue;
     TermService termService;
     ProjectService projectService;
+
+    //EXPERIMENTAL
+    @Autowired
+    TermRepository termRepository;
 
     GridContextMenu<Term> menu = grid.addContextMenu();
 
@@ -171,10 +175,9 @@ public class TermView extends VerticalLayout {
         grid.asSingleSelect().clear();
         editTerm(new Term());
     }
-    private void updateList() {
-        grid.setItems(termService.findAllTerms(filterText.getValue()));
-    }
+    /*                                      ORIGINAL CODE
     private void updateListUnfiltered(){
+
         grid.setItems(termService.findAllTerms());
     }
     private void updateListFiltered() {
@@ -201,6 +204,61 @@ public class TermView extends VerticalLayout {
             updateListUnfiltered();
         }else{
             grid.setItems(termService.findAllTermsByProject(projName.get()));
+        }
+    }
+    */
+    // EXPERIMENTAL
+    private void updateListUnfiltered(){
+        grid.setItems( query -> {
+                    return termRepository.findAll(
+                            PageRequest.of(
+                                    query.getPage(),
+                                    query.getPageSize()
+                            )
+                    ).stream();
+                });
+    }
+    private void updateListFiltered() {
+        if (projectFilter.getProjectName().isEmpty()) {
+            updateListUnfiltered();
+        } else {
+            Project likeFilter = projectService.findAllProjects(projectFilter.getProjectName()).get(0);
+            grid.setItems(q -> {
+                return termRepository
+                        .findByProjectIsLike(
+                            likeFilter,
+                                PageRequest.of(q.getPage(), q.getPageSize())
+                        ).stream();
+            });
+        }
+    }
+    private void updateListSearch(Optional<String> projName){
+        if(projName.isEmpty()){
+            updateListUnfiltered();
+        }else if (projName.isPresent()){
+            Project likeFilter = projectService.findAllProjects(projName.get()).get(0);
+            grid.setItems(q -> {
+                return termRepository
+                        .findByProjectIsLike(
+                                likeFilter,
+                                PageRequest.of(q.getPage(), q.getPageSize())
+                        ).stream()
+                        .filter(term -> term.getSourceTerm().contains(filterText.getValue()));
+            });
+        }
+    }
+    private void updateListByProj(Optional<String> projName) {
+        if(projName.isEmpty()){
+            updateListUnfiltered();
+        }else{
+            Project likeFilter = projectService.findAllProjects(projName.get()).get(0);
+            grid.setItems(q -> {
+                return termRepository
+                        .findByProjectIsLike(
+                                likeFilter,
+                                PageRequest.of(q.getPage(), q.getPageSize())
+                        ).stream();
+            });
         }
     }
 }
