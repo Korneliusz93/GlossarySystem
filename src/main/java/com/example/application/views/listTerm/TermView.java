@@ -11,6 +11,7 @@ import com.example.application.views.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -61,18 +62,37 @@ public class TermView extends VerticalLayout {
         setSizeFull();
         configureGrid();
         configureForm();
+
         add(getToolbar(), getContent());
         updateListUnfiltered();
         closeEditor();
     }
     private HorizontalLayout getContent() {
-        HorizontalLayout content = new HorizontalLayout(grid, form);
+        /*HorizontalLayout content = new HorizontalLayout(grid, form);
+
         content.setFlexGrow(2, grid);
+        content.setFlexGrow(1, form);
+
+
+
+        content.addClassNames("content");
+        content.setSizeFull();
+
+        return content;*/
+
+        Div gridWrapper = new Div(grid);
+        gridWrapper.setSizeFull();
+
+        HorizontalLayout content = new HorizontalLayout(gridWrapper, form);
+        content.setFlexGrow(2, gridWrapper);
         content.setFlexGrow(1, form);
         content.addClassNames("content");
         content.setSizeFull();
+
         return content;
+
     }
+
     // FORM CODE
     private void configureForm() {
         form = new TermForm(projectService);
@@ -111,6 +131,7 @@ public class TermView extends VerticalLayout {
     }
     private void configureGrid() {
         grid.addClassNames("term-grid");
+
         grid.setSizeFull();
         grid.setColumns("sourceTerm", "targetTerm");
         /*grid.addColumn(term -> term.getTargetTerm())
@@ -128,6 +149,8 @@ public class TermView extends VerticalLayout {
         menu.addItem("Delete", event -> {
             deleteTermContext(event.getItem().get());
         });
+
+
     }
     private void configureProjectBox(){
         projectBox.setItems(projectService.findAllProjects());
@@ -172,6 +195,7 @@ public class TermView extends VerticalLayout {
 
         HorizontalLayout toolbar = new HorizontalLayout(filterText, projectBox, clearSelectionButton,
                 addTermButtonDialog);
+        grid.setPaginationLocation(PaginatedGrid.PaginationLocation.BOTTOM);
         toolbar.addClassName("toolbar");
         return toolbar;
     }
@@ -202,6 +226,7 @@ public class TermView extends VerticalLayout {
         editTerm(new Term());
     }
 
+
     // EXPERIMENTAL
     private void updateListUnfiltered(){
 
@@ -226,17 +251,17 @@ public class TermView extends VerticalLayout {
                     }
 
                     return termService.fetchTerms(
-                            //query.getPage(),
-                            1,
+                            query.getPage(),
                             query.getPageSize(),
                             sortOrders
                     ).stream();
                 },
                 query -> termService.getTermCount());
 
+
+
         grid.setPageSize(20);
         grid.setPaginatorSize(5);
-
         grid.setDataProvider(dataProvider);
     }
 
@@ -277,7 +302,6 @@ public class TermView extends VerticalLayout {
 
             grid.setPageSize(20);
             grid.setPaginatorSize(5);
-
             grid.setDataProvider(dataProvider);
 
         }

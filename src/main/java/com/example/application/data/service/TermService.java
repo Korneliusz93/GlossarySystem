@@ -70,7 +70,6 @@ public class TermService implements TermServiceInterface{
 
         // Fetch data using sorting criteria
         return termRepository.findAll(PageRequest.of(offset, limit, sort)).getContent();
-
     }
 
     @Override
@@ -108,7 +107,7 @@ public class TermService implements TermServiceInterface{
 
     @Override
     public int getTermCount() {
-        return 10;
+        return (int) termRepository.count();
     }
 
     @Override
