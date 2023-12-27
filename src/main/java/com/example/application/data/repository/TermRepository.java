@@ -21,5 +21,9 @@ public interface TermRepository extends JpaRepository<Term, Long> {
     List<Term> findBySourceTermLikeIgnoreCase(String sourceTermPattern, Pageable pageable);
     List<Term> findByProjectIsLike(Project project, Pageable pageable);
 
+    @Query("SELECT t FROM Term t " +
+            "WHERE lower(t.sourceTerm) LIKE lower(concat('%', :searchTerm, '%')) " +
+            "AND (:project IS NULL OR t.project = :project)")
+    List<Term> findByProjectIsLikeAndSourceTermContaining(@Param("project") Project project,@Param("searchTerm") String searchTerm, Pageable pageable);
 
 }

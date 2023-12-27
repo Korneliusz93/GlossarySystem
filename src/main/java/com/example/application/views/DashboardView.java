@@ -19,14 +19,6 @@ public class DashboardView extends VerticalLayout {
     private ProjectService projectService;
     private TermService termService;
 
-    /*public DashboardView(CrmService service) {
-        this.service = service;
-        addClassName("dashboard-view");
-        setDefaultHorizontalComponentAlignment(Alignment.CENTER);
-        add(getContactStats(), getCompaniesChart());
-        add();
-    }*/
-
     public DashboardView(ProjectService projectService, TermService termService,
                          LanguageService languageService, CategoryService categoryService,
                             ClientService clientService) {
@@ -75,40 +67,4 @@ public class DashboardView extends VerticalLayout {
         configuration.setSeries(dataSeries);
         return chart;
     }
-
-    /*private Chart getProjectTargetChart() {
-        Chart chart = new Chart(ChartType.PIE);
-        DataSeries dataSeries = new DataSeries();
-        projectService.findAllProjects().forEach(project ->
-                dataSeries.add(new DataSeriesItem(project.getProjectName(), project.getProjectTargetCount())));
-        chart.getConfiguration().setSeries(dataSeries);
-        return chart;
-    }
-
-    private Chart getProjectSourceChart() {
-        Chart chart = new Chart(ChartType.PIE);
-        DataSeries dataSeries = new DataSeries();
-        projectService.findAllProjects().forEach(project ->
-                dataSeries.add(new DataSeriesItem(project.getProjectName(), project.getProjectSourceCount())));
-        chart.getConfiguration().setSeries(dataSeries);
-        return chart;
-    }
-
-    private Chart getProjectClientChart() {
-        Chart chart = new Chart(ChartType.PIE);
-        DataSeries dataSeries = new DataSeries();
-        projectService.findAllProjects().forEach(project ->
-                dataSeries.add(new DataSeriesItem(project.getProjectName(), project.getProjectClientCount())));
-        chart.getConfiguration().setSeries(dataSeries);
-        return chart;
-    }
-
-    private Chart getProjectCategoryChart() {
-        Chart chart = new Chart(ChartType.PIE);
-        DataSeries dataSeries = new DataSeries();
-        projectService.findAllProjects().forEach(project ->
-                dataSeries.add(new DataSeriesItem(project.getProjectName(), project.getProjectCategoryCount())));
-        chart.getConfiguration().setSeries(dataSeries);
-        return chart;
-    }*/
 }

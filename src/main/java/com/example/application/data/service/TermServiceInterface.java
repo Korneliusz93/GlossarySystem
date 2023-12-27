@@ -12,12 +12,20 @@ public interface TermServiceInterface {
             int limit,
             List<TermSort> sortOrders);
         int getTermCount();
+        int getOffset();
 
     List<Term> fetchTerms(
             Project filter,
             int offset,
             int limit,
             List<TermSort> sortOrders);
+
+    List<Term> fetchTerms(
+            Project filter,
+            int offset,
+            int limit,
+            List<TermSort> sortOrders,
+            String filterText);
 
         TermSort createSort(
                 String propertyName,

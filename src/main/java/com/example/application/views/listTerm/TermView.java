@@ -10,12 +10,12 @@ import com.example.application.data.service.TermService;
 import com.example.application.views.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.SortDirection;
 import com.vaadin.flow.data.provider.SortOrder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -23,6 +23,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.vaadin.klaudeta.PaginatedGrid;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
@@ -35,17 +36,19 @@ import java.util.stream.Collectors;
 @PageTitle("Terms | Gloss system")
 @RolesAllowed({ "ROLE_ADMIN", "ROLE_STAFF", "ROLE_USER", "ROLE_GUEST" })
 public class TermView extends VerticalLayout {
-    Grid<Term> grid = new Grid<>(Term.class);
+    //Grid<Term> grid = new Grid<>(Term.class);
+    PaginatedGrid <Term> grid = new PaginatedGrid<>(Term.class);
+
     TextField filterText = new TextField();
     ComboBox<Project> projectBox = new ComboBox<Project>();
     @Autowired
     ProjectFilter projectFilter;
     TermForm form;
+    TermDialog dialog;
     String selectedValue;
     TermService termService;
     ProjectService projectService;
 
-    //EXPERIMENTAL
     @Autowired
     TermRepository termRepository;
 
@@ -70,6 +73,7 @@ public class TermView extends VerticalLayout {
         content.setSizeFull();
         return content;
     }
+    // FORM CODE
     private void configureForm() {
         form = new TermForm(projectService);
         form.setWidth("25em");
@@ -86,6 +90,17 @@ public class TermView extends VerticalLayout {
         termService.deleteTerm(event.getTerm());
         updateListFiltered();
     }
+    //---------------
+    //DIALOG CODE
+    private void configureDialog() {
+        dialog = new TermDialog(projectService);
+        dialog.addListener(TermDialog.SaveEvent.class, this::saveTerm);
+    }
+    private void saveTerm(TermDialog.SaveEvent event) {
+        termService.saveTerm(event.getTerm());
+        updateListFiltered();
+    }
+    //----------------
     private void deleteTerm(Term term) {
         termService.deleteTerm(term);
         updateListFiltered();
@@ -104,6 +119,8 @@ public class TermView extends VerticalLayout {
 
         grid.setItemDetailsRenderer(createTermDetailsRenderer());
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
+
+
 
         menu.addItem("Edit", event -> {
             editTerm(event.getItem().get());
@@ -139,8 +156,10 @@ public class TermView extends VerticalLayout {
 
         configureProjectBox();
 
-        Button addTermButton = new Button("Add term");
-        addTermButton.addClickListener(click -> addProject());
+        //Button addTermButton = new Button("Add term");
+        Button addTermButtonDialog = new Button("Add term Dialog");
+        //addTermButton.addClickListener(click -> addProject());
+        addTermButtonDialog.addClickListener(buttonClickEvent -> configureDialog());
 
         Button clearSelectionButton = new Button(VaadinIcon.CLOSE.create());
         clearSelectionButton.addClickListener(click -> {
@@ -151,7 +170,8 @@ public class TermView extends VerticalLayout {
                 }
         );
 
-        HorizontalLayout toolbar = new HorizontalLayout(filterText, projectBox, clearSelectionButton, addTermButton);
+        HorizontalLayout toolbar = new HorizontalLayout(filterText, projectBox, clearSelectionButton,
+                addTermButtonDialog);
         toolbar.addClassName("toolbar");
         return toolbar;
     }
@@ -181,101 +201,95 @@ public class TermView extends VerticalLayout {
         grid.asSingleSelect().clear();
         editTerm(new Term());
     }
-    /*                                      ORIGINAL CODE
-    private void updateListUnfiltered(){
 
-        grid.setItems(termService.findAllTerms());
-    }
-    private void updateListFiltered() {
-        if (projectFilter.getProjectName().isEmpty()){
-            updateListUnfiltered();
-        } else {
-            updateListByProj(Optional.ofNullable(projectFilter.getProjectName()));
-        }
-    }
-    private void updateListSearch(Optional<String> projName){
-        if(projName.isEmpty()){
-            updateListUnfiltered();
-        }else if (projName.isPresent()){
-            List<Term> terms = termService.findAllTermsByProject(projName.get());
-            List <Term> filteredTerms =
-                    terms.stream()
-                        .filter(term -> term.getSourceTerm().contains(filterText.getValue()))
-                        .collect(Collectors.toList());
-            grid.setItems(filteredTerms);
-        }
-    }
-    private void updateListByProj(Optional<String> projName) {
-        if(projName.isEmpty()){
-            updateListUnfiltered();
-        }else{
-            grid.setItems(termService.findAllTermsByProject(projName.get()));
-        }
-    }
-    */
     // EXPERIMENTAL
     private void updateListUnfiltered(){
-        grid.setItems( query -> {
-            List<TermSort> sortOrders = query.getSortOrders().stream().map(
-                    querySortOrder ->
-                            new TermSort(querySortOrder.getSorted(),querySortOrder.getDirection().equals(
-                                    SortDirection.ASCENDING
-                            ))).collect(Collectors.toList());
-            for (SortOrder<String> queryOrder :
-                    query.getSortOrders()) {
-                TermSort sort = termService
-                        .createSort(
-                                //name of sorted property
-                                queryOrder.getSorted(),
-                                //sort direction for property
-                                queryOrder.getDirection() ==
-                                        SortDirection.DESCENDING);
-                sortOrders.add(sort);
-            }
-            return termService.fetchTerms(
-                    query.getPage(),
-                    query.getPageSize(),
-                    sortOrders
-            ).stream();
-        });
+
+        DataProvider<Term, Void> dataProvider =
+        DataProvider.fromCallbacks(
+                query -> {
+                    List<TermSort> sortOrders = query.getSortOrders().stream().map(
+                            querySortOrder ->
+                                    new TermSort(querySortOrder.getSorted(),querySortOrder.getDirection().equals(
+                                            SortDirection.ASCENDING
+                                    ))).collect(Collectors.toList());
+                    for (SortOrder<String> queryOrder :
+                            query.getSortOrders()) {
+                        TermSort sort = termService
+                                .createSort(
+                                        //name of sorted property
+                                        queryOrder.getSorted(),
+                                        //sort direction for property
+                                        queryOrder.getDirection() ==
+                                                SortDirection.DESCENDING);
+                        sortOrders.add(sort);
+                    }
+
+                    return termService.fetchTerms(
+                            //query.getPage(),
+                            1,
+                            query.getPageSize(),
+                            sortOrders
+                    ).stream();
+                },
+                query -> termService.getTermCount());
+
+        grid.setPageSize(20);
+        grid.setPaginatorSize(5);
+
+        grid.setDataProvider(dataProvider);
     }
+
     private void updateListFiltered() {
-        if (projectFilter.getProjectName().isEmpty()) {
+        Project likeFilter = projectService.findAllProjects(projectFilter.getProjectName()).get(0);
+        if (projectFilter.getProjectName() == null || projectFilter.getProjectName().isBlank()
+                || projectFilter.getProjectName().isEmpty()) {
             updateListUnfiltered();
         } else {
-            Project likeFilter = projectService.findAllProjects(projectFilter.getProjectName()).get(0);
-            grid.setItems( query -> {
-                List<TermSort> sortOrders = query.getSortOrders().stream().map(
-                        querySortOrder ->
-                                new TermSort(querySortOrder.getSorted(),querySortOrder.getDirection().equals(
-                                        SortDirection.ASCENDING
-                                ))).collect(Collectors.toList());
-                for (SortOrder<String> queryOrder :
-                        query.getSortOrders()) {
-                    TermSort sort = termService
-                            .createSort(
-                                    //name of sorted property
-                                    queryOrder.getSorted(),
-                                    //sort direction for property
-                                    queryOrder.getDirection() ==
-                                            SortDirection.DESCENDING);
-                    sortOrders.add(sort);
-                }
-                return termService.fetchTerms(
-                        likeFilter,
-                        query.getPage(),
-                        query.getPageSize(),
-                        sortOrders
-                ).stream();
-            });
+            DataProvider<Term, Void> dataProvider =
+                    DataProvider.fromCallbacks(
+                            query -> {
+                                List<TermSort> sortOrders = query.getSortOrders().stream().map(
+                                        querySortOrder ->
+                                                new TermSort(querySortOrder.getSorted(), querySortOrder.getDirection().equals(
+                                                        SortDirection.ASCENDING
+                                                ))).collect(Collectors.toList());
+                                for (SortOrder<String> queryOrder :
+                                        query.getSortOrders()) {
+                                    TermSort sort = termService
+                                            .createSort(
+                                                    //name of sorted property
+                                                    queryOrder.getSorted(),
+                                                    //sort direction for property
+                                                    queryOrder.getDirection() ==
+                                                            SortDirection.DESCENDING);
+                                    sortOrders.add(sort);
+                                }
+
+                                return termService.fetchTerms(
+                                        likeFilter,
+                                        query.getPage(),
+                                        query.getPageSize(),
+                                        sortOrders
+                                ).stream();
+                            },
+                            query -> termService.getTermCount());
+
+            grid.setPageSize(20);
+            grid.setPaginatorSize(5);
+
+            grid.setDataProvider(dataProvider);
+
         }
     }
+
     private void updateListSearch(Optional<String> projName){
         if(projName.isEmpty()){
             updateListUnfiltered();
         }else if (projName.isPresent()){
             Project likeFilter = projectService.findAllProjects(projName.get()).get(0);
-            grid.setItems( query -> {
+            DataProvider<Term, Void> dataProvider =
+                    DataProvider.fromCallbacks( query -> {
                 List<TermSort> sortOrders = query.getSortOrders().stream().map(
                         querySortOrder ->
                                 new TermSort(querySortOrder.getSorted(),querySortOrder.getDirection().equals(
@@ -292,14 +306,25 @@ public class TermView extends VerticalLayout {
                                             SortDirection.DESCENDING);
                     sortOrders.add(sort);
                 }
+
                 return termService.fetchTerms(
                         likeFilter,
                         query.getPage(),
                         query.getPageSize(),
-                        sortOrders
-                ).stream()
-                        .filter(term -> term.getSourceTerm().contains(filterText.getValue()));
-            });
+                        sortOrders,
+                        filterText.getValue()
+                ).stream();
+            },
+            query -> termService.getTermCount());
+
+            grid.setPageSize(20);
+            grid.setPaginatorSize(5);
+
+            grid.setDataProvider(dataProvider);
+
+        } else {
+            // Update the list without filtering if projName is empty
+            updateListUnfiltered();
         }
     }
     private void updateListByProj(Optional<String> projName) {
@@ -307,7 +332,8 @@ public class TermView extends VerticalLayout {
             updateListUnfiltered();
         }else{
             Project likeFilter = projectService.findAllProjects(projName.get()).get(0);
-            grid.setItems( query -> {
+            DataProvider<Term, Void> dataProvider =
+                    DataProvider.fromCallbacks( query -> {
                 List<TermSort> sortOrders = query.getSortOrders().stream().map(
                         querySortOrder ->
                                 new TermSort(querySortOrder.getSorted(),querySortOrder.getDirection().equals(
@@ -324,13 +350,20 @@ public class TermView extends VerticalLayout {
                                             SortDirection.DESCENDING);
                     sortOrders.add(sort);
                 }
+
                 return termService.fetchTerms(
                         likeFilter,
                         query.getPage(),
                         query.getPageSize(),
                         sortOrders
                 ).stream();
-            });
+            },
+            query -> termService.getTermCount());
+
+            grid.setPageSize(20);
+            grid.setPaginatorSize(5);
+
+            grid.setDataProvider(dataProvider);
         }
     }
 }

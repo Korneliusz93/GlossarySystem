@@ -90,8 +90,30 @@ public class TermService implements TermServiceInterface{
     }
 
     @Override
+    public List<Term> fetchTerms(Project filter, int offset, int limit, List<TermSort> sortOrders, String filterText){
+        List<Sort.Order> orders = sortOrders.stream()
+                .filter(sort -> isNotBlank(sort.getPropertyName()))
+                .map(sort -> Sort.Order.by(sort.getPropertyName()).with(
+                        sort.isDescending() ? Sort.Direction.DESC : Sort.Direction.ASC))
+                .collect(Collectors.toList());
+
+        Sort sort = Sort.by(orders);
+
+        return termRepository
+                .findByProjectIsLikeAndSourceTermContaining(
+                        filter,
+                        filterText,
+                        PageRequest.of(offset, limit, sort));
+    }
+
+    @Override
     public int getTermCount() {
-        return 0;
+        return 10;
+    }
+
+    @Override
+    public int getOffset(){
+        return 1;
     }
 
     @Override
